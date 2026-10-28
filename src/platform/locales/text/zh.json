@@ -4589,5 +4589,12 @@
   "Surround with ReadWriteLock.readLock": "用 ReadWriteLock.readLock 包围",
   "Surround with ReadWriteLock.writeLock": "用 ReadWriteLock.writeLock 包围",
   "Iterate Iterable or array": "迭代 Iterable 或数组",
-  "No live templates to surround with": "没有可用于包围的实时模板"
+  "No live templates to surround with": "没有可用于包围的实时模板",
+  "Sort by Name": "按名称排序",
+  "Sort by Type": "按类型排序",
+  "Sort by Modification Time": "按修改时间排序",
+  "Add Mouse Shortcut": "添加鼠标快捷键",
+  "Click here with a mouse side button, holding any modifiers": "按住任意修饰键，用鼠标侧键点击此处",
+  "Mouse shortcut": "鼠标快捷键",
+  "Mouse Shortcut: {action}": "鼠标快捷键：{action}"
 }

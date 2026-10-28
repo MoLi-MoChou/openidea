@@ -4,7 +4,7 @@ import { getAction, registerActions, type Action } from "@/platform/actions";
 import { dirname, useProject } from "@/platform/project";
 import { showContextMenu, type MenuItem } from "@/ui";
 import { maybeEditorService, menuGroupItems, toolWindowService } from "@/workbench/contributions";
-import { OPTION_LABELS } from "./HeaderActions";
+import { OPTION_LABELS, SORT_LABELS } from "./HeaderActions";
 import { newMenuItems, revealLabel } from "./contextMenu";
 import { openNewPopup } from "./newPopupModel";
 import type { ProjectNode } from "./model";
@@ -170,6 +170,15 @@ export function registerProjectActions(): () => void {
       setViewMode(mode);
       showProjectView(false);
     },
+  }));
+
+  const sorts: Action[] = SORT_LABELS.map(([sortBy, label]) => ({
+    id: `project.sortBy.${sortBy}`,
+    title: tx`Project View: ${label}`,
+    category: "View",
+    keywords: ["project", "tree", "sort", "order"],
+    toggled: () => useProjectTree.getState().options.sortBy === sortBy,
+    run: () => setViewOption("sortBy", sortBy),
   }));
 
   return registerActions([
@@ -499,5 +508,6 @@ export function registerProjectActions(): () => void {
     },
     ...toggles,
     ...modes,
+    ...sorts,
   ]);
 }
