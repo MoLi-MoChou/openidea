@@ -18,6 +18,7 @@ import {
   findFileUsages,
   folderOf,
   leadNode,
+  openCopyDialog,
   openMoveDialog,
   openRenameDialog,
   openSelection,
@@ -28,6 +29,7 @@ import {
   type PathKind,
 } from "./operations";
 import { nameOf, parentOf } from "./paths";
+import { showFilePathPopup } from "./filePath";
 import { showNewPopup, treeHandle } from "./ProjectView";
 import { lastFileRefactoring, undoFileRefactoring } from "./fileRefactor";
 import {
@@ -316,6 +318,33 @@ export function registerProjectActions(): () => void {
       keyWhen: "!popupOpen",
       keywords: ["remove", "trash"],
       run: ({ arg }) => deleteSelection(nodesFrom(arg)),
+    },
+    {
+      // F5 (CopyElement): the Copy dialog for the selection, or for the file in the editor.
+      id: "project.copyElement",
+      title: "Copy…",
+      category: "Project View",
+      icon: "copy",
+      when: OPEN,
+      keyWhen: `${FOCUS} || editorFocus`,
+      keywords: ["copy file", "duplicate file", "clone"],
+      run: ({ arg, ctx }) => {
+        if (arg !== undefined || ctx.projectViewFocus) return openCopyDialog(nodesFrom(arg));
+        const path = activeEditor()?.ctx.path;
+        if (path) openCopyDialog(nodesFrom(path));
+      },
+    },
+    {
+      id: "navigate.showFilePath",
+      title: "File Path",
+      category: "Navigate",
+      when: OPEN,
+      keywords: ["reveal in finder", "show in explorer", "path popup"],
+      run: ({ arg, ctx }) => {
+        const node = typeof arg === "string" || ctx.projectViewFocus ? nodesFrom(arg)[0] : undefined;
+        const path = node?.path ?? activeEditor()?.ctx.path;
+        if (path) showFilePathPopup(path, node?.dir ?? false);
+      },
     },
     { id: "project.copy", title: "Copy", category: "Project View", when: FOCUS, run: () => copySelection(false) },
     { id: "project.cut", title: "Cut", category: "Project View", when: FOCUS, run: () => copySelection(true) },
