@@ -1179,6 +1179,15 @@ export type AgentRegistry = {
 	warning: string | null,
 };
 
+/**  An API request the agent is about to retry. */
+export type AgentRetry = {
+	attempt: number,
+	maxRetries: number | null,
+	/**  When the next attempt starts (ms since the epoch). */
+	retryAtMs: number | null,
+	error: string | null,
+};
+
 /**  Where an agent comes from. */
 export type AgentSource = { kind: "builtin" } | 
 /**  Defined by the user in `<config>/agents/<id>.toml`. */
@@ -1238,6 +1247,11 @@ export type AgentTask = {
 	capabilities?: AgentCapabilities,
 	/**  When a [`AgentStatus::Limited`] task's limit resets (ms since the epoch), if the agent said. */
 	resetsMs?: number | null,
+	/**
+	 *  The agent is retrying a failed API request (connection lost, overloaded…); cleared
+	 *  by its next output or any status change.
+	 */
+	retry?: AgentRetry | null,
 };
 
 export type AgentToolDiff = {
