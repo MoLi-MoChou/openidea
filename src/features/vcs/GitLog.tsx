@@ -1123,7 +1123,9 @@ export function CommitDetails({ commits }: { commits: Commit[] }) {
     clearTimeout(previewTimer.current);
     if (!logOptions().diffPreview || sel.size !== 1) return;
     const file = fileNodeAt(tree, [...sel][0]!)?.file;
-    if (file) previewTimer.current = setTimeout(() => void showChangesDiff([file], true), PREVIEW_DELAY);
+    // A preview that cannot open (no editor yet, the file went away) is just skipped.
+    if (file)
+      previewTimer.current = setTimeout(() => void showChangesDiff([file], true).catch(() => undefined), PREVIEW_DELAY);
   };
 
   useEffect(() => {
