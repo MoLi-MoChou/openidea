@@ -25,7 +25,7 @@ vi.mock("@tauri-apps/api/webview", () => ({
 }));
 
 import { SessionEditor } from "./SessionEditor";
-import { useAgents } from "./store";
+import { updateComposer, useAgents } from "./store";
 
 const task: AgentTask = {
   id: "editing",
@@ -108,6 +108,33 @@ describe("editing a sent agent message", () => {
     await waitFor(() =>
       expect(ipc.prompt).toHaveBeenCalledWith(task.id, { text: "Edited message", files: [], images: [] }, false),
     );
+  });
+
+  it.each(["", "Another draft"])("recovers the edit after rollback if sending fails (draft: %j)", async (draft) => {
+    ipc.rollback.mockImplementation(async () => {
+      // The backend emits Truncated before replying, removing the inline editor.
+      useAgents.setState({ entries: new Map([[task.id, []]]) });
+      return { status: "ok", data: null };
+    });
+    let finish!: (value: unknown) => void;
+    ipc.prompt.mockReturnValue(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    const { user, box, send } = await edit();
+    act(() => updateComposer(task.id, { text: draft }));
+    await user.click(send);
+    expect(box).not.toBeInTheDocument();
+    await act(async () => finish({ status: "error", error: { kind: "internal", message: "Send failed" } }));
+    expect(screen.getByRole("textbox", { name: "Message" })).toHaveValue(
+      draft ? `Edited message\n${draft}` : "Edited message",
+    );
+    expect(screen.getByRole("textbox", { name: "Message" })).toHaveFocus();
+    ipc.prompt.mockResolvedValue({ status: "ok", data: null });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    expect(ipc.prompt).toHaveBeenCalledTimes(2);
+    expect(ipc.rollback).toHaveBeenCalledTimes(1);
   });
 
   it.each([{ metaKey: true }, { ctrlKey: true }])("still sends with modified Enter (%j)", async (modifier) => {
