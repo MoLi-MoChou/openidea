@@ -40,6 +40,16 @@ describe("pending hints", () => {
     expect(hint()).toBe("New error");
   });
 
+  it("does not overwrite a newer hint while waiting to show progress", () => {
+    const done = showPendingHint(view, "Waiting…");
+    vi.advanceTimersByTime(100);
+    showHint(view, "New error", { tone: "error" });
+    vi.advanceTimersByTime(150);
+    expect(hint()).toBe("New error");
+    done();
+    expect(hint()).toBe("New error");
+  });
+
   it.each(["edit", "move", "destroy"])("does not show stale progress after %s", (change) => {
     const done = showPendingHint(view, "Waiting…");
     if (change === "edit") view.dispatch({ changes: { from: 0, insert: "x" } });

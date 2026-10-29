@@ -13,7 +13,7 @@ import { commands, nextRequestId, type OutlineItem, type RequestId, type SymbolK
 import { useProject } from "@/platform/project";
 import { debounce, docOf, isUnavailable, lspRequest } from "./lsp";
 import { posToOffset } from "./positions";
-import { featureBackoff, onLspRefresh } from "./availability";
+import { featureBackoff, onLspRefresh, onServerSettled } from "./availability";
 import { editorPrefs } from "@/platform/editorSettings";
 import { authorLabel, authorSummary, authorTooltip, blameFor, onBlameInvalidated } from "./authorLens";
 import { tx } from "@/platform/i18n";
@@ -113,8 +113,10 @@ class UsagesLensPlugin {
   private outline: { doc: Text; targets: LensTarget[] } | null = null;
   private generation = 0;
   private pending = new Set<RequestId>();
+  private incomplete = false;
   private unsubscribe: () => void;
   private offReady: () => void;
+  private offSettled: () => void;
   private offBlame: () => void;
 
   constructor(private view: EditorView) {
@@ -126,6 +128,9 @@ class UsagesLensPlugin {
     this.offReady = onLspRefresh("codeLens", () => {
       this.cache.clear();
       this.refresh();
+    });
+    this.offSettled = onServerSettled(() => {
+      if (this.incomplete) this.refresh();
     });
     this.offBlame = onBlameInvalidated(() => this.refresh());
   }
@@ -159,6 +164,7 @@ class UsagesLensPlugin {
     }
     const text = view.state.doc;
     const wanted = () => gen === this.generation && view.state.doc === text;
+    this.incomplete = false;
     // Blame runs beside the reference requests; it never holds up the counts.
     const blame = authors ? blameFor(doc.path, text) : Promise.resolve(null);
     if (this.cacheDoc !== text) {
@@ -191,7 +197,10 @@ class UsagesLensPlugin {
                 // Only an explicit Find Usages should widen the server's scope.
                 return commands.lspReferences(request, doc.doc, { line: t.line, col: t.col }, false, false);
               }, wanted);
-              if (wanted() && !incomplete) this.cache.set(key(t), refs.length);
+              if (wanted()) {
+                if (incomplete) this.incomplete = true;
+                else this.cache.set(key(t), refs.length);
+              }
             } catch (e) {
               if (wanted() && isUnavailable(e)) unavailable = true;
             } finally {
@@ -230,6 +239,7 @@ class UsagesLensPlugin {
     this.schedule.cancel();
     this.unsubscribe();
     this.offReady();
+    this.offSettled();
     this.offBlame();
     this.cancel();
   }

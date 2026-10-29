@@ -130,6 +130,30 @@ describe("background usage counts", () => {
     expect(titles(view)).toEqual(["2 usages"]);
   });
 
+  it("retries incomplete counts when indexing ends without a code-lens refresh", async () => {
+    ipc.lspReferences.mockResolvedValueOnce(refs(0, "indexing"));
+    const view = editor();
+    emitLocalIdeEvent({ type: "languageServer", server: 1, name: "rust-analyzer", status: "busy", message: null });
+    await settle();
+    expect(titles(view)).toEqual([]);
+    await settle();
+    emitLocalIdeEvent({ type: "languageServer", server: 1, name: "rust-analyzer", status: "ready", message: null });
+    await settle();
+    expect(ipc.lspReferences).toHaveBeenCalledTimes(2);
+    expect(titles(view)).toEqual(["2 usages"]);
+  });
+
+  it("does not repeat complete counts when the server finishes other work", async () => {
+    const view = editor();
+    emitLocalIdeEvent({ type: "languageServer", server: 1, name: "rust-analyzer", status: "busy", message: null });
+    await settle();
+    await settle();
+    emitLocalIdeEvent({ type: "languageServer", server: 1, name: "rust-analyzer", status: "ready", message: null });
+    await settle();
+    expect(ipc.lspReferences).toHaveBeenCalledTimes(1);
+    expect(titles(view)).toEqual(["2 usages"]);
+  });
+
   it("cancels all in-flight requests on destroy without starting the next batch", async () => {
     const pending = deferred<ReturnType<typeof refs>>();
     ipc.docOutline.mockResolvedValue(ok(Array.from({ length: 8 }, (_, i) => item(`f${i}`, "function", i))));
