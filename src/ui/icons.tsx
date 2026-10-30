@@ -744,6 +744,8 @@ const FILE_NAMES = table({
 const NAME_PATTERNS: readonly (readonly [RegExp, IconName])[] = [
   [/^(dockerfile|containerfile)[.-]/, "file-docker"],
   [/^(docker-)?compose([.-][\w-]+)?\.ya?ml$/, "file-docker"],
+  // Spring Boot config files (IDEA Ultimate marks these like the Spring Boot run icon).
+  [/^(application|bootstrap)(-[\w-]+)?\.(ya?ml|properties)$/, "spring-boot"],
   [/^\.env(\.|$)/, "file-dotenv"],
   [/^(licen[cs]e|copying)(-[\w.-]+|\.(md|txt|rst))?$/, "file-license"],
   [/^requirements([.-][\w.-]*)?\.(txt|in)$/, "file-requirements"],

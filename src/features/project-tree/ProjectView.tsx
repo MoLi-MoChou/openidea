@@ -23,10 +23,10 @@ import { executeAction } from "@/platform/actions";
 import { setContext } from "@/platform/context";
 import { tx, useTxTemplate } from "@/platform/i18n";
 import { isTauri } from "@/platform/ipc";
-import type { RootFolder } from "@/platform/languageSettings";
-import { useEffectiveRoots } from "@/platform/projectRoots";
+import { useDetectedRoots, useEffectiveRoots } from "@/platform/projectRoots";
 import { macStroke, strokeOf } from "@/platform/keymap";
 import { OWNS_FILE_DROP, prepareMenuGroups, useFileDecoration } from "@/workbench/contributions";
+import { useRun } from "@/features/run/store";
 import {
   FILES_DRAG,
   HighlightedText,
@@ -36,7 +36,6 @@ import {
   Tree,
   acquirePopup,
   fileIconName,
-  folderIconName,
   showContextMenu,
   type DragSession,
   type TreeHandle,
@@ -44,7 +43,7 @@ import {
 } from "@/ui";
 import { contextMenuItems, menuGroupContext, newMenuItems } from "./contextMenu";
 import { openNewPopup } from "./newPopupModel";
-import { folderKind } from "./folderKind";
+import { applicationClassIcons, projectNodeIcon } from "./icons";
 import { useHomeDir } from "./home";
 import { keyLike, nodeKeyFor, visibleInfo, type ProjectNode } from "./model";
 import { lastFileRefactoring, undoFileRefactoring } from "./fileRefactor";
@@ -108,14 +107,6 @@ const getKey = (n: ProjectNode) => n.key;
 const getLabel = (n: ProjectNode) => n.label;
 const isExpandable = (n: ProjectNode) => n.dir && !n.placeholder;
 const loadChildren = (n: ProjectNode) => loadDir(n.path);
-
-function iconFor(node: ProjectNode, roots: readonly RootFolder[], root: string | null): string {
-  if (node.placeholder) return node.placeholder === "dir" ? "folder" : "file";
-  if (node.icon) return node.icon;
-  if (node.root) return "module";
-  if (node.dir) return folderIconName(folderKind(node, roots, root));
-  return fileIconName(node.label);
-}
 
 // ---------------------------------------------------------------------------
 // Inline editor (new file / folder, rename)
@@ -245,8 +236,11 @@ const Row = memo(function Row({
 }: RowProps) {
   const deco = useFileDecoration(node.path);
   const roots = useEffectiveRoots();
+  const detected = useDetectedRoots();
   const root = useProjectTree((s) => s.root);
-  const icon = iconFor(node, roots, root);
+  const configs = useRun((s) => s.configs);
+  const apps = useMemo(() => applicationClassIcons(configs), [configs]);
+  const icon = projectNodeIcon(node, roots, root, detected, apps);
   const isEditing =
     !!editing && (node.placeholder ? editing.kind === "new" : editing.kind === "rename" && editing.key === node.key);
   const faded = node.ignored || deco.faded;
