@@ -40,8 +40,14 @@ const ICONS = {
   "folder-excluded": "nodes/excludeRoot",
   "folder-library": "nodes/libraryFolder",
   "folder-github": "nodes/folderGithub",
+  "folder-generated-source": "nodes/generatedSource",
+  "folder-generated-test": "nodes/generatedTestRoot",
+  "folder-compiled": "nodes/compiledClassesFolder",
+  "folder-javadoc": "nodes/javaDocFolder",
   module: "nodes/module",
+  "module-java": "nodes/moduleJava",
   "spring-boot": "openidea/runConfigurations/springBoot",
+  "file-java-test": "nodes/test",
   file: "fileTypes/text",
   "file-unknown": "fileTypes/unknown",
   "file-code": "fileTypes/anyType",
@@ -727,6 +733,8 @@ const FILE_NAMES = table({
   "file-dotenv": ".flaskenv",
   "file-gradle": "gradlew",
   "file-maven": "pom.xml mvnw",
+  module: "module-info.java",
+  package: "package-info.java",
   "file-jenkins": "jenkinsfile",
   "file-bazel": "build workspace .bazelrc .bazelversion",
   "file-terraform": ".terraformrc terraform.rc",
@@ -883,7 +891,11 @@ export type FolderKind =
   | "library"
   | "github"
   | "module"
-  | "package";
+  | "package"
+  | "generatedSource"
+  | "generatedTest"
+  | "compiled"
+  | "javadoc";
 
 /** Folder icon by role (expui has no separate "open" folder glyph). */
 export function folderIconName(kind: FolderKind = "plain"): IconName {
@@ -906,6 +918,14 @@ export function folderIconName(kind: FolderKind = "plain"): IconName {
       return "module";
     case "package":
       return "package";
+    case "generatedSource":
+      return "folder-generated-source";
+    case "generatedTest":
+      return "folder-generated-test";
+    case "compiled":
+      return "folder-compiled";
+    case "javadoc":
+      return "folder-javadoc";
     default:
       return "folder";
   }

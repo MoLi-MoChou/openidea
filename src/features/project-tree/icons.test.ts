@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { RootFolder } from "@/platform/languageSettings";
-import { applicationClassIcons, applicationFileIcon, moduleFolderIcon, projectNodeIcon } from "./icons";
+import {
+  applicationClassIcons,
+  applicationFileIcon,
+  javaTestFileIcon,
+  moduleFolderIcon,
+  projectNodeIcon,
+} from "./icons";
 
 const pom = (path: string, from: string): RootFolder => ({
   path,
@@ -58,6 +64,15 @@ describe("applicationFileIcon", () => {
   });
 });
 
+describe("javaTestFileIcon", () => {
+  it("matches JUnit-style suffixes without false positives", () => {
+    expect(javaTestFileIcon("OrderTest.java")).toBe("file-java-test");
+    expect(javaTestFileIcon("OrderTests.kt")).toBe("file-java-test");
+    expect(javaTestFileIcon("FlowIT.java")).toBe("file-java-test");
+    expect(javaTestFileIcon("Contest.java")).toBeNull();
+    expect(javaTestFileIcon("DemoApplication.java")).toBeNull();
+  });
+});
 describe("projectNodeIcon", () => {
   const detected = [pom("src/main/java", "pom.xml"), pom("core/src/main/java", "core/pom.xml")];
   const apps = applicationClassIcons([{ kind: "spring-boot", name: "DemoApplication" }]);
@@ -69,6 +84,13 @@ describe("projectNodeIcon", () => {
     expect(
       projectNodeIcon({ path: "/p/core", label: "core", dir: true, root: false, excluded: false }, [], "/p", detected),
     ).toBe("maven-module");
+  });
+
+  it("uses module-java for JVM projects without a Maven/Gradle module folder icon", () => {
+    const roots = [{ path: "src/main/java", kind: "source" as const, detectedFrom: null }];
+    expect(projectNodeIcon({ path: "/p", label: "p", dir: true, root: true, excluded: false }, roots, "/p", [])).toBe(
+      "module-java",
+    );
   });
 
   it("keeps the plain module icon when no JVM build file is detected", () => {
@@ -108,6 +130,75 @@ describe("projectNodeIcon", () => {
         apps,
       ),
     ).toBe("file-java");
+  });
+
+  it("uses generated / compiled / test / class file glyphs", () => {
+    expect(
+      projectNodeIcon(
+        {
+          path: "/p/target/generated-sources/annotations",
+          label: "annotations",
+          dir: true,
+          root: false,
+          excluded: true,
+        },
+        [],
+        "/p",
+      ),
+    ).toBe("folder-generated-source");
+    expect(
+      projectNodeIcon(
+        { path: "/p/target/classes", label: "classes", dir: true, root: false, excluded: true },
+        [],
+        "/p",
+      ),
+    ).toBe("folder-compiled");
+    expect(
+      projectNodeIcon(
+        {
+          path: "/p/src/test/java/OrderTest.java",
+          label: "OrderTest.java",
+          dir: false,
+          root: false,
+          excluded: false,
+        },
+        [],
+        "/p",
+      ),
+    ).toBe("file-java-test");
+    expect(
+      projectNodeIcon(
+        { path: "/p/out/Foo.class", label: "Foo.class", dir: false, root: false, excluded: false },
+        [],
+        "/p",
+      ),
+    ).toBe("file-binary");
+    expect(
+      projectNodeIcon(
+        {
+          path: "/p/src/main/java/module-info.java",
+          label: "module-info.java",
+          dir: false,
+          root: false,
+          excluded: false,
+        },
+        [],
+        "/p",
+      ),
+    ).toBe("module");
+    expect(
+      projectNodeIcon(
+        {
+          path: "/p/src/main/java/com/example/package-info.java",
+          label: "package-info.java",
+          dir: false,
+          root: false,
+          excluded: false,
+        },
+        [],
+        "/p",
+      ),
+    ).toBe("package");
   });
 
   it("uses source-root and package glyphs under Maven layouts", () => {

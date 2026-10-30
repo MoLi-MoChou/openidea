@@ -47,6 +47,20 @@ describe("folder icons", () => {
     // Resource folders stay plain folders, not packages.
     expect(kind("src/test/resources/db")).toBe("plain");
   });
+
+  it("marks generated / compiled / javadoc output folders (IDEA Modules.*)", () => {
+    const kind = (rel: string, excluded = true) => folderKind({ path: `/p/${rel}`, excluded }, MAVEN, "/p");
+    expect(kind("target/generated-sources")).toBe("generatedSource");
+    expect(kind("target/generated-sources/annotations")).toBe("generatedSource");
+    expect(kind("target/generated-test-sources/test-annotations")).toBe("generatedTest");
+    expect(kind("build/generated/sources/annotationProcessor/java/main")).toBe("generatedSource");
+    expect(kind("build/generated/sources/annotationProcessor/java/test")).toBe("generatedTest");
+    expect(kind("target/classes")).toBe("compiled");
+    expect(kind("build/classes")).toBe("compiled");
+    expect(kind("target/javadoc")).toBe("javadoc");
+    // Do not treat a source package named "classes" as compiled output.
+    expect(kind("src/main/java/com/example/classes", false)).toBe("package");
+  });
 });
 
 describe("New › Package", () => {

@@ -45,6 +45,20 @@ export function applicationClassIcons(configs: readonly { kind: string; name: st
   return out;
 }
 
+/** JUnit-style type names (IDEA marks test PsiClasses with the test glyph). */
+export function isJavaTestTypeName(stem: string): boolean {
+  return /(?:Test|Tests|TestCase|IT|ITCase)$/.test(stem);
+}
+
+/** Icon for a Java / Kotlin test source by type name (case-sensitive suffix). */
+export function javaTestFileIcon(fileName: string): string | null {
+  const dot = fileName.lastIndexOf(".");
+  if (dot <= 0) return null;
+  const ext = fileName.slice(dot + 1).toLowerCase();
+  if (ext !== "java" && ext !== "kt") return null;
+  return isJavaTestTypeName(fileName.slice(0, dot)) ? "file-java-test" : null;
+}
+
 /**
  * Icon for a Java / Kotlin source whose simple class name matches a detected
  * Application or Spring Boot run configuration (IDEA marks those files specially).
@@ -57,6 +71,16 @@ export function applicationFileIcon(fileName: string, apps: ReadonlyMap<string, 
   if (ext !== "java" && ext !== "kt") return null;
   const stem = fileName.slice(0, dot);
   return apps.get(stem) ?? (ext === "kt" ? (apps.get(`${stem}Kt`) ?? null) : null);
+}
+
+/** True when the project has JVM source/test roots (IDEA Java module glyph). */
+export function isJvmModuleProject(roots: readonly RootFolder[], detected: readonly RootFolder[] = []): boolean {
+  return [...roots, ...detected].some(
+    (r) =>
+      (r.kind === "source" || r.kind === "test") &&
+      (/(^|\/)(java|kotlin|scala|groovy)$/.test(r.path) ||
+        /(^|\/)(pom\.xml|build\.gradle(\.kts)?)$/.test(r.detectedFrom ?? "")),
+  );
 }
 
 /** Project-tree row icon (folders, modules, files). */
@@ -75,8 +99,8 @@ export function projectNodeIcon(
       const build = moduleFolderIcon(rel, detected);
       if (build) return build;
     }
-    if (node.root) return "module";
+    if (node.root) return isJvmModuleProject(roots, detected) ? "module-java" : "module";
     return folderIconName(folderKind(node, roots, root, detected));
   }
-  return applicationFileIcon(node.label, apps) ?? fileIconName(node.label);
+  return applicationFileIcon(node.label, apps) ?? javaTestFileIcon(node.label) ?? fileIconName(node.label);
 }
