@@ -25,13 +25,15 @@ describe("sniffJavaTypeKind", () => {
     );
   });
 
-  it("marks Spring stereotypes with the Spring Boot glyph", () => {
-    const info = sniffJavaTypeKind(
-      "package p;\nimport org.springframework.web.bind.annotation.RestController;\n@RestController\npublic class Api {}\n",
+  it("uses the Boot glyph only for @SpringBootApplication, not other stereotypes", () => {
+    const boot = sniffJavaTypeKind(
+      "package p;\n@SpringBootApplication\npublic class App {\n  public static void main(String[] a) {}\n}\n",
     );
-    expect(info).toEqual({ kind: "class", spring: true });
-    expect(javaTypeIconName(info!)).toBe("spring-boot");
-    expect(javaTypeIconName(sniffJavaTypeKind("@Service\npublic class Orders {}\n")!)).toBe("spring-boot");
+    expect(boot).toEqual({ kind: "class", spring: true });
+    expect(javaTypeIconName(boot!)).toBe("spring-boot");
+    // No Ultimate stereotype assets: @RestController stays a class icon.
+    expect(javaTypeIconName(sniffJavaTypeKind("@RestController\npublic class Api {}\n")!)).toBe("class");
+    expect(javaTypeIconName(sniffJavaTypeKind("@Service\npublic class Orders {}\n")!)).toBe("class");
     expect(javaTypeIconName(sniffJavaTypeKind("public interface Port {}\n")!)).toBe("interface");
   });
 });

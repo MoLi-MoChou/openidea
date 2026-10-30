@@ -1,8 +1,8 @@
 /**
  * Lightweight Java/Kotlin type icons for the Project view: a small content sniff
  * (IDEA's PsiBasedFileIconProvider / IconProvider) cached after a folder loads.
- * Spring stereotype annotations reuse the existing Spring Boot glyph (no Ultimate
- * stereotype assets in the open-source icon set).
+ * `@SpringBootApplication` reuses the Boot run-config glyph; other Spring
+ * stereotypes keep the type icon (Ultimate stereotype SVGs are not OSS).
  */
 import { create } from "zustand";
 import { call, commands, isTauri } from "@/platform/ipc";
@@ -11,12 +11,12 @@ export type JavaTypeKind = "class" | "class-abstract" | "interface" | "enum" | "
 
 export interface JavaTypeInfo {
   kind: JavaTypeKind;
-  /** Spring stereotype / Boot application annotation present on the type. */
+  /** `@SpringBootApplication` present on the type (not other stereotypes). */
   spring?: boolean;
 }
 
-const SPRING_ANN =
-  /@(?:SpringBootApplication|RestController|Controller|Service|Repository|Component|Configuration|ControllerAdvice|RestControllerAdvice)\b/;
+/** Only the Boot application type uses the Boot run-config glyph; other stereotypes keep the type icon (Ultimate stereotype SVGs are not OSS). */
+const SPRING_BOOT_APP = /@SpringBootApplication\b/;
 
 /** Strip // and /* *\/ comments; keep newlines so line structure survives. */
 export function stripJavaNoise(src: string): string {
@@ -75,9 +75,9 @@ export function sniffJavaTypeKind(src: string): JavaTypeInfo | null {
   else if (raw === "record") kind = "record";
   else if (raw === "annotation class") kind = "annotation";
   else kind = abstractKw ? "class-abstract" : "class";
-  // Annotations attached to the type sit in the slice before the match.
-  const head = code.slice(Math.max(0, m.index - 800), m.index);
-  const spring = SPRING_ANN.test(head) || SPRING_ANN.test(code.slice(0, 2000));
+  // Annotations on/above the type: only @SpringBootApplication upgrades the icon.
+  const head = code.slice(Math.max(0, m.index - 800), m.index + 80);
+  const spring = SPRING_BOOT_APP.test(head);
   return spring ? { kind, spring: true } : { kind };
 }
 

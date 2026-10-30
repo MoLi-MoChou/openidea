@@ -36,7 +36,7 @@ const ICONS = {
   "folder-source": "nodes/sourceRoot",
   "folder-test": "nodes/testRoot",
   "folder-resources": "nodes/resourcesRoot",
-  "folder-test-resources": "openidea/nodes/testResourcesRoot",
+  "folder-test-resources": "nodes/testResourcesRoot",
   "folder-excluded": "nodes/excludeRoot",
   "folder-library": "nodes/libraryFolder",
   "folder-github": "nodes/folderGithub",
