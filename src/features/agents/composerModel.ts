@@ -74,6 +74,19 @@ function inOrder(text: string, query: string): boolean {
   return i >= query.length;
 }
 
+/** Whether an `@` query is a typed-out path (`../x`, `./x`, `/x`) rather than a project file search. */
+export const isPathQuery = (query: string) => /^(\.\.?(\/|$)|\/)/.test(query);
+
+/** `rel` (as typed after `@`) resolved against `root`, `.` and `..` folded lexically. */
+export function resolveTyped(root: string, rel: string): string {
+  const out: string[] = [];
+  for (const part of (rel.startsWith("/") ? rel : `${root}/${rel}`).split("/")) {
+    if (part === "..") out.pop();
+    else if (part && part !== ".") out.push(part);
+  }
+  return `/${out.join("/")}`;
+}
+
 /** `@rel` with a line range suffix when given ("@src/a.rs:10-20"). */
 export function mentionOf(rel: string, lines?: { from: number; to: number }): string {
   if (!lines) return `@${rel}`;
