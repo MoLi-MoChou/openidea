@@ -8,6 +8,7 @@ import type { RootFolder } from "@/platform/languageSettings";
 import { relativePath } from "@/platform/project";
 import { fileIconName, folderIconName } from "@/ui";
 import { folderKind } from "./folderKind";
+import { getJavaTypeIcon } from "./javaTypeIcons";
 import type { ProjectNode } from "./model";
 
 /** Build-file basename → Project-view icon for that module directory. */
@@ -102,5 +103,10 @@ export function projectNodeIcon(
     if (node.root) return isJvmModuleProject(roots, detected) ? "module-java" : "module";
     return folderIconName(folderKind(node, roots, root, detected));
   }
-  return applicationFileIcon(node.label, apps) ?? javaTestFileIcon(node.label) ?? fileIconName(node.label);
+  return (
+    applicationFileIcon(node.label, apps) ??
+    getJavaTypeIcon(node.path) ??
+    javaTestFileIcon(node.label) ??
+    fileIconName(node.label)
+  );
 }

@@ -402,8 +402,11 @@ const ICONS = {
   "current-branch": "openidea/vcs/currentBranch",
   // Symbols (also used by `symbol-<kind>`)
   class: "nodes/class",
+  "class-abstract": "nodes/classAbstract",
   interface: "nodes/interface",
   enum: "nodes/enum",
+  record: "nodes/record",
+  annotation: "nodes/annotation",
   method: "nodes/method",
   function: "nodes/function",
   field: "nodes/field",

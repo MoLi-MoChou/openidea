@@ -25,9 +25,9 @@ export function specialFolderKind(rel: string): FolderKind | null {
   // Maven: target/generated-sources[/annotations], generated-test-sources[/…]
   if (/(^|\/)generated-test-sources(\/|$)/i.test(rel)) return "generatedTest";
   if (/(^|\/)generated-sources(\/|$)/i.test(rel)) return "generatedSource";
-  // Gradle: build/generated/sources/…/(main|test)/…
-  if (/(^|\/)generated\/sources?\/.+/i.test(rel)) {
-    return /\/test(\/|$)/i.test(rel) ? "generatedTest" : "generatedSource";
+  // Gradle / KAPT: build/generated/sources?/… or …/kapt/…
+  if (/(^|\/)generated\/sources?\/.+/i.test(rel) || /(^|\/)generated\/(kapt|source)\//i.test(rel)) {
+    return /\/(test|testFixtures)(\/|$)/i.test(rel) ? "generatedTest" : "generatedSource";
   }
   // Bare `generated` only under a build output tree.
   if (/(^|\/)(target|build)\/generated$/i.test(rel)) return "generatedSource";

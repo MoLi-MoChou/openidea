@@ -31,6 +31,7 @@ import {
 import { projectFs } from "./fs";
 import { projectViewRoots, useProjectViewRoots, type ProjectViewRootContribution } from "@/workbench/contributions";
 import { ancestorsWithin, isSameOrInside, type PackageKind } from "./paths";
+import { invalidateJavaTypeIcons, scheduleJavaTypeSniffs } from "./javaTypeIcons";
 
 export interface ViewOptions extends TreeOptions {
   /** Select the active editor's file in the tree. */
@@ -376,6 +377,7 @@ export function loadDir(path: string, force = false): Promise<void> {
       const entries = await projectFs(root).readDir(path);
       if (gen !== generation) return;
       putListing(path, entries);
+      scheduleJavaTypeSniffs(entries.filter((e) => e.kind === "file").map((e) => e.path));
       // Compact Middle Packages needs to look one level down a single-folder chain.
       const s = get();
       if (s.options.compact) {
@@ -389,6 +391,7 @@ export function loadDir(path: string, force = false): Promise<void> {
       if (e instanceof IpcError && (e.kind === "notFound" || e.kind === "invalidInput")) {
         const listings = new Map(s.listings);
         dropListings(listings, [path]);
+        invalidateJavaTypeIcons([path]);
         const expanded = new Set([...s.expanded].filter((k) => !isSameOrInside(pathOfKey(k), path) || k === s.root));
         set({ listings, expanded });
         if (path === s.root) set({ listings: new Map(listings).set(path, []) });
@@ -409,6 +412,10 @@ export async function applyFsChange(event: { created: string[]; modified: string
   const s = get();
   if (!s.root) return;
   const plan = planRefresh(event, new Set(s.listings.keys()));
+  if (plan.drop.length || plan.reload.length || event.modified.length) {
+    invalidateJavaTypeIcons([...plan.drop, ...plan.reload, ...event.modified]);
+    scheduleJavaTypeSniffs(event.modified);
+  }
   if (plan.drop.length) {
     const listings = new Map(s.listings);
     dropListings(listings, plan.drop);

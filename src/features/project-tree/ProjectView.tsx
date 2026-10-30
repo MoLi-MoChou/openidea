@@ -44,6 +44,7 @@ import {
 import { contextMenuItems, menuGroupContext, newMenuItems } from "./contextMenu";
 import { openNewPopup } from "./newPopupModel";
 import { applicationClassIcons, projectNodeIcon } from "./icons";
+import { useJavaTypeIcons } from "./javaTypeIcons";
 import { useHomeDir } from "./home";
 import { keyLike, nodeKeyFor, visibleInfo, type ProjectNode } from "./model";
 import { lastFileRefactoring, undoFileRefactoring } from "./fileRefactor";
@@ -240,6 +241,8 @@ const Row = memo(function Row({
   const root = useProjectTree((s) => s.root);
   const configs = useRun((s) => s.configs);
   const apps = useMemo(() => applicationClassIcons(configs), [configs]);
+  // Re-render when a content sniff fills the Java type icon for this path.
+  useJavaTypeIcons((s) => s.byPath.get(node.path));
   const icon = projectNodeIcon(node, roots, root, detected, apps);
   const isEditing =
     !!editing && (node.placeholder ? editing.kind === "new" : editing.kind === "rename" && editing.key === node.key);
