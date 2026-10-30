@@ -3,6 +3,7 @@ import { rootRole, type FolderRole, type RootFolder } from "@/platform/languageS
 import { basename, relativePath } from "@/platform/project";
 import type { FolderKind } from "@/ui";
 import type { ProjectNode } from "./model";
+import { packageKindAt } from "./packages";
 
 const ROLE_KIND: Record<FolderRole, FolderKind> = {
   source: "source",
@@ -13,16 +14,23 @@ const ROLE_KIND: Record<FolderRole, FolderKind> = {
 };
 
 /**
- * Project Structure marks and roots detected from build files. Like IDEA, only
- * excluded folders get the excluded icon; git-ignored ones keep the plain one.
+ * Project Structure marks and roots detected from build files. Like IDEA:
+ * - source / test / resources roots get their root glyphs
+ * - packages under JVM (or Python) source/test roots get the package glyph
+ * - only excluded folders get the excluded icon; git-ignored ones keep the plain one
  */
 export function folderKind(
   node: Pick<ProjectNode, "path" | "excluded">,
   roots: readonly RootFolder[],
   root: string | null,
+  detected: readonly RootFolder[] = [],
 ): FolderKind {
   if (node.excluded) return "excluded";
-  const role = root ? rootRole(roots, relativePath(root, node.path)) : null;
+  if (!root) return basename(node.path) === ".github" ? "github" : "plain";
+  const rel = node.path === root ? "" : relativePath(root, node.path);
+  const role = rootRole(roots, rel);
   if (role) return ROLE_KIND[role];
+  // IDEA `PackageElementNode` → PlatformIcons.Package under source/test roots.
+  if (packageKindAt(rel, roots, detected)) return "package";
   return basename(node.path) === ".github" ? "github" : "plain";
 }

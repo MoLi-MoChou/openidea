@@ -19,6 +19,7 @@ const root = (path: string, kind: RootFolder["kind"], detectedFrom: string | nul
 
 const MAVEN: RootFolder[] = [
   root("src/main/java", "source", "pom.xml"),
+  root("src/main/resources", "resources", "pom.xml"),
   root("src/test/java", "test", "pom.xml"),
   root("src/test/resources", "testResources", "pom.xml"),
   root("target", "excluded", "pom.xml"),
@@ -28,12 +29,23 @@ describe("folder icons", () => {
   it("follow detected and marked roots", () => {
     const kind = (rel: string, excluded = false) => folderKind({ path: `/p/${rel}`, excluded }, MAVEN, "/p");
     expect(kind("src/main/java")).toBe("source");
+    expect(kind("src/main/resources")).toBe("resources");
     expect(kind("src/test/java")).toBe("test");
     expect(kind("src/test/resources")).toBe("testResources");
     expect(kind("target")).toBe("excluded");
     expect(kind("src")).toBe("plain");
+    expect(kind("src/main")).toBe("plain");
     expect(kind("docs", true)).toBe("excluded");
     expect(kind(".github")).toBe("github");
+  });
+
+  it("marks packages under JVM source and test roots (IDEA PackageElementNode)", () => {
+    const kind = (rel: string) => folderKind({ path: `/p/${rel}`, excluded: false }, MAVEN, "/p");
+    expect(kind("src/main/java/com")).toBe("package");
+    expect(kind("src/main/java/com/example")).toBe("package");
+    expect(kind("src/test/java/com/example")).toBe("package");
+    // Resource folders stay plain folders, not packages.
+    expect(kind("src/test/resources/db")).toBe("plain");
   });
 });
 

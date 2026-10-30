@@ -1,7 +1,8 @@
 /**
  * Project-view icons that need more than a file name: Maven / Gradle module
- * folders (IDEA's MavenIconProvider) and Application / Spring Boot launch
- * classes (detected run configurations).
+ * folders (IDEA's MavenIconProvider), source/test/resource/package folders
+ * (IDEA content roots + PackageElementNode), and Application / Spring Boot
+ * launch classes (detected run configurations).
  */
 import type { RootFolder } from "@/platform/languageSettings";
 import { relativePath } from "@/platform/project";
@@ -75,7 +76,7 @@ export function projectNodeIcon(
       if (build) return build;
     }
     if (node.root) return "module";
-    return folderIconName(folderKind(node, roots, root));
+    return folderIconName(folderKind(node, roots, root, detected));
   }
   return applicationFileIcon(node.label, apps) ?? fileIconName(node.label);
 }

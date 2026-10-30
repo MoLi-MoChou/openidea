@@ -110,6 +110,49 @@ describe("projectNodeIcon", () => {
     ).toBe("file-java");
   });
 
+  it("uses source-root and package glyphs under Maven layouts", () => {
+    const roots = [
+      { path: "src/main/java", kind: "source" as const, detectedFrom: "pom.xml" },
+      { path: "src/main/resources", kind: "resources" as const, detectedFrom: "pom.xml" },
+      { path: "src/test/java", kind: "test" as const, detectedFrom: "pom.xml" },
+    ];
+    expect(
+      projectNodeIcon(
+        { path: "/p/src/main/java", label: "java", dir: true, root: false, excluded: false },
+        roots,
+        "/p",
+        roots,
+      ),
+    ).toBe("folder-source");
+    expect(
+      projectNodeIcon(
+        { path: "/p/src/main/resources", label: "resources", dir: true, root: false, excluded: false },
+        roots,
+        "/p",
+        roots,
+      ),
+    ).toBe("folder-resources");
+    expect(
+      projectNodeIcon(
+        { path: "/p/src/test/java", label: "java", dir: true, root: false, excluded: false },
+        roots,
+        "/p",
+        roots,
+      ),
+    ).toBe("folder-test");
+    expect(
+      projectNodeIcon(
+        { path: "/p/src/main/java/com/example", label: "com.example", dir: true, root: false, excluded: false },
+        roots,
+        "/p",
+        roots,
+      ),
+    ).toBe("package");
+    expect(
+      projectNodeIcon({ path: "/p/src", label: "src", dir: true, root: false, excluded: false }, roots, "/p", roots),
+    ).toBe("folder");
+  });
+
   it("keeps yaml file-type icons (and Spring Boot for application*.yml)", () => {
     expect(
       projectNodeIcon(

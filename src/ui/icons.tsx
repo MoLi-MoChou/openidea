@@ -882,7 +882,8 @@ export type FolderKind =
   | "excluded"
   | "library"
   | "github"
-  | "module";
+  | "module"
+  | "package";
 
 /** Folder icon by role (expui has no separate "open" folder glyph). */
 export function folderIconName(kind: FolderKind = "plain"): IconName {
@@ -903,6 +904,8 @@ export function folderIconName(kind: FolderKind = "plain"): IconName {
       return "folder-github";
     case "module":
       return "module";
+    case "package":
+      return "package";
     default:
       return "folder";
   }
